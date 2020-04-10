@@ -37,7 +37,8 @@ def timeseries_dataset_from_array(
     shuffle=False,
     seed=None,
     start_index=None,
-    end_index=None):
+    end_index=None,
+    output_sequence=False):
   """Creates a dataset of sliding windows over a timeseries provided as array.
 
   This function takes in a sequence of data-points gathered at
@@ -114,6 +115,23 @@ def timeseries_dataset_from_array(
     assert np.array_equal(targets[0], data[10])  # Corresponding target: step 10
     break
   ```
+
+  Example 3: temporal regression. Consider an array `data` of scalar
+  values, of shape `(steps,)`. To generate a training dataset for a stateful 
+  time series model that uses current timestamp input data (and its past) to
+  predict the current output of the same dataset, you would use:
+
+  ```python
+  input_data = X
+  targets = y
+  dataset = tf.keras.preprocessing.timeseries.dataset_from_array(
+    input_data, targets, sequence_length=10, output_sequence=True)
+  for batch in dataset:
+    inputs, targets = batch
+    assert np.array_equal(inputs[0], X[:10])  # First sequence: steps [0-9]
+    assert np.array_equal(targets[0], y[:10])  # Corresponding target: step 10
+    break
+  ```
   """
   # Validate the shape of data and targets
   if targets is not None and len(targets) != len(data):
@@ -185,10 +203,12 @@ def timeseries_dataset_from_array(
 
   dataset = sequences_from_indices(data, indices, start_index, end_index)
   if targets is not None:
-    indices = dataset_ops.Dataset.zip(
-        (dataset_ops.Dataset.range(len(start_positions)), positions_ds)).map(
-            lambda i, positions: positions[i],
-            num_parallel_calls=dataset_ops.AUTOTUNE)
+    # in non-time-distributed case create indices for 
+    if not output_sequence:
+      indices = dataset_ops.Dataset.zip(
+          (dataset_ops.Dataset.range(len(start_positions)), positions_ds)).map(
+              lambda i, positions: positions[i],
+              num_parallel_calls=dataset_ops.AUTOTUNE)
     target_ds = sequences_from_indices(
         targets, indices, start_index, end_index)
     dataset = dataset_ops.Dataset.zip((dataset, target_ds))

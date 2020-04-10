@@ -52,7 +52,7 @@ ARG CACHE_STOP=1
 ARG CHECKOUT_TF_SRC=0
 # In case of Python 2.7+ we need to add passwd entries for user and group id
 RUN chmod a+w /etc/passwd /etc/group
-RUN test "${CHECKOUT_TF_SRC}" -eq 1 && git clone https://github.com/kopytjuk/tensorflow.git /tensorflow_src || true
+RUN test "${CHECKOUT_TF_SRC}" -eq 1 && git clone https://github.com/tensorflow/tensorflow.git /tensorflow_src || true
 
 # See http://bugs.python.org/issue19846
 ENV LANG C.UTF-8
@@ -100,6 +100,8 @@ RUN mkdir /bazel && \
     chmod +x /bazel/installer.sh && \
     /bazel/installer.sh && \
     rm -f /bazel/installer.sh
+
+COPY . /tensorflow_src
 
 COPY bashrc /etc/bash.bashrc
 RUN chmod a+rwx /etc/bash.bashrc

@@ -103,5 +103,5 @@ RUN mkdir /bazel && \
 
 COPY . /tensorflow_src
 
-COPY ./bashrc /etc/bash.bashrc
+COPY ./tensorflow/tools/dockerfiles/bashrc /etc/bash.bashrc
 RUN chmod a+rwx /etc/bash.bashrc

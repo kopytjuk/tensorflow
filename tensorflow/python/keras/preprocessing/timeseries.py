@@ -33,6 +33,7 @@ def timeseries_dataset_from_array(
     sequence_length,
     sequence_stride=1,
     sampling_rate=1,
+    targets_as_timeseries=False;
     batch_size=128,
     shuffle=False,
     seed=None,
@@ -185,10 +186,14 @@ def timeseries_dataset_from_array(
 
   dataset = sequences_from_indices(data, indices, start_index, end_index)
   if targets is not None:
-    indices = dataset_ops.Dataset.zip(
-        (dataset_ops.Dataset.range(len(start_positions)), positions_ds)).map(
-            lambda i, positions: positions[i],
-            num_parallel_calls=dataset_ops.AUTOTUNE)
+    if targets_as_timeseries:
+      # use same targets as above
+      pass
+    else:
+      indices = dataset_ops.Dataset.zip(
+          (dataset_ops.Dataset.range(len(start_positions)), positions_ds)).map(
+              lambda i, positions: positions[i],
+              num_parallel_calls=dataset_ops.AUTOTUNE)
     target_ds = sequences_from_indices(
         targets, indices, start_index, end_index)
     dataset = dataset_ops.Dataset.zip((dataset, target_ds))
